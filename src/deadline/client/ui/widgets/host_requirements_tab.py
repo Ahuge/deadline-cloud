@@ -180,7 +180,6 @@ class HostRequirementsWidget(QWidget):  # pylint: disable=too-few-public-methods
         self.mode_selection_box.use_default_button.setChecked(False)
         self.mode_selection_box.use_custom_button.setChecked(True)
 
-
 class OverrideRequirementsWidget(QGroupBox):  # pylint: disable=too-few-public-methods
     """
     UI elements to hold top level selection between using all workers or selected workers that meet requirements.
@@ -232,6 +231,8 @@ class OSRequirementsWidget(QGroupBox):
     Args:
         parent: The parent Qt Widget.
     """
+    OS_ROW_OPTIONS = ["linux", "macos", "windows"]
+    CPU_ROW_OPTIONS = ["x86_64", "arm64"]
 
     OS_ROW_OPTIONS = ["linux", "macos", "windows"]
     CPU_ROW_OPTIONS = ["x86_64", "arm64"]
@@ -680,6 +681,12 @@ class CustomAmountWidget(CustomCapabilityWidget):
             )
         return requirement
 
+    def set_requirement(self, requirement: Dict[str, Any]):
+        if requirement.get("min"):
+            self.min_spin_box.setValue(requirement.get("min"))
+        if requirement.get("max"):
+            self.max_spin_box.setValue(requirement.get("max"))
+
 
 class CustomAttributeWidget(CustomCapabilityWidget):
     """
@@ -923,6 +930,31 @@ class CustomAttributeWidget(CustomCapabilityWidget):
             )
 
         return requirement
+
+    def set_requirement(self, requirement: Dict[str, Any]):
+        option = ""
+        if requirement.get("anyOf") and not self.any_of_button.isChecked():
+            self.any_of_button.setChecked(True)
+            option = "anyOf"
+        elif requirement.get("allOf") and self.any_of_button.isChecked():
+            self.any_of_button.setChecked(False)
+            option = "allOf"
+
+        values = requirement.get(option)
+        if len(values) > self.value_list_widget.count():
+            # Added additional values:
+            for _ in range(len(values) - self.value_list_widget.count()):
+                self._add_value()
+        elif len(values) < self.value_list_widget.count():
+            # Removed values:
+            for i in range(self.value_list_widget.count() - len(values)):
+                value = self.value_list_widget.itemWidget(self.value_list_widget.item(i + len(values)))
+                self.remove_value_item(value.value_list_item)
+
+        # We now have the correct number of value widgets. Let us just go fill all the values in.
+        for i in range(self.value_list_widget.count()):
+            value = self.value_list_widget.itemWidget(self.value_list_widget.item(i))
+            value.line_edit.setText(values[i])
 
 
 class CustomAttributeValueWidget(QWidget):
