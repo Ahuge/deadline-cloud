@@ -31,6 +31,12 @@ This submodule contains Qt GUIs, based on PySide(2/6), for common controls
 and widgets used in interactive submitters, and to display the status
 of various AWS Deadline Cloud resources.
 
+### `src/client/util`
+
+This submodule contains logic for handling client provided callbacks and
+automatically loading submitter plugins from disk.
+See [Submitter Plugins](#Submitter-Plugins)
+
 ### `src/client/job_bundle`
 
 This submodule contains code related to the history of job submissions

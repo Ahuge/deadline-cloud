@@ -22,9 +22,13 @@ from qtpy.QtWidgets import (  # pylint: disable=import-error; type: ignore
     QTabWidget,
     QVBoxLayout,
     QWidget,
+    QFrame
 )
 
 from deadline.client.ui.dialogs.submit_job_progress_dialog import SubmitJobProgressDialog
+
+from deadline.client.util.plugin_manager import PluginManager
+
 from deadline.job_attachments.models import JobAttachmentS3Settings
 from deadline.job_attachments.upload import S3AssetManager
 
@@ -84,7 +88,10 @@ class SubmitJobToDeadlineDialog(QDialog):
         initial_shared_parameter_values: dict[str, Any],
         auto_detected_attachments: AssetReferences,
         attachments: AssetReferences,
+        plugins_dir=None,
         on_create_job_bundle_callback,
+        on_ui_callback=None,
+        on_post_submit_callback=None,
         parent=None,
         f=Qt.WindowFlags(),
         show_host_requirements_tab=False,
@@ -99,10 +106,30 @@ class SubmitJobToDeadlineDialog(QDialog):
         self.job_settings_type = type(initial_job_settings)
         self.submitter_name = submitter_name or self.job_settings_type().submitter_name
         self.on_create_job_bundle_callback = on_create_job_bundle_callback
+        self.on_ui_callback = on_ui_callback
         self.create_job_response: Optional[Dict[str, Any]] = None
         self.job_history_bundle_dir: Optional[str] = None
         self.deadline_authentication_status = DeadlineAuthenticationStatus.getInstance()
         self.show_host_requirements_tab = show_host_requirements_tab
+        self.host_requirements_tab: Optional[HostRequirementsWidget] = None
+
+        self.plugin_manager = PluginManager(plugin_directory=plugins_dir)
+        self.plugin_manager.create_hook_plugin(
+            create_job_bundle_callback=on_create_job_bundle_callback,
+            ui_callback=on_ui_callback,
+            post_submit_callback=on_post_submit_callback
+        )
+
+        host_requirements = None
+        if self.host_requirements_tab is not None:
+            host_requirements = self.host_requirements_tab.get_requirements()
+
+        initial_job_settings, auto_detected_attachments, host_requirements, job_uis = self.plugin_manager.call_ui_hook(
+            dialog=self,
+            job_settings=initial_job_settings,
+            asset_references=auto_detected_attachments,
+            host_requirements=host_requirements
+        )
 
         self._build_ui(
             job_setup_widget_type,
@@ -111,6 +138,7 @@ class SubmitJobToDeadlineDialog(QDialog):
             auto_detected_attachments,
             attachments,
             host_requirements,
+            job_uis
         )
 
         self.gui_update_counter: Any = None
@@ -127,6 +155,18 @@ class SubmitJobToDeadlineDialog(QDialog):
         attachments: Optional[AssetReferences] = None,
         load_new_bundle: bool = False,
     ):
+        host_requirements = None
+        if self.host_requirements_tab is not None:
+            host_requirements = self.host_requirements_tab.get_requirements()
+
+        job_settings, auto_detected_attachments, host_requirements, job_uis = self.plugin_manager.call_ui_hook(
+            job_settings=job_settings,
+            asset_references=auto_detected_attachments,
+            host_requirements=host_requirements
+        )
+
+        if self.show_host_requirements_tab:
+            self.host_requirements.set_requirements(host_requirements)
         # Refresh the UI components
         self.refresh_deadline_settings()
         if (auto_detected_attachments is not None) or (attachments is not None):
@@ -148,6 +188,8 @@ class SubmitJobToDeadlineDialog(QDialog):
         auto_detected_attachments: AssetReferences,
         attachments: AssetReferences,
         host_requirements: Optional[HostRequirements],
+        job_ui: Optional[QWidget],
+        job_uis: Optional[list[QWidget]],
     ):
         self.lyt = QVBoxLayout(self)
         self.lyt.setContentsMargins(5, 5, 5, 5)
@@ -158,7 +200,7 @@ class SubmitJobToDeadlineDialog(QDialog):
         self.lyt.addWidget(self.tabs)
 
         self._build_shared_job_settings_tab(initial_job_settings, initial_shared_parameter_values)
-        self._build_job_settings_tab(job_setup_widget_type, initial_job_settings)
+        self._build_job_settings_tab(job_setup_widget_type, initial_job_settings, job_uis)
         self._build_job_attachments_tab(auto_detected_attachments, attachments)
 
         # Show host requirements only if requested by the constructor
@@ -254,17 +296,31 @@ class SubmitJobToDeadlineDialog(QDialog):
         self.shared_job_settings_tab.setWidgetResizable(True)
         self.shared_job_settings.parameter_changed.connect(self.on_shared_job_parameter_changed)
 
-    def _build_job_settings_tab(self, job_setup_widget_type, initial_job_settings):
+    def _build_job_settings_tab(self, job_setup_widget_type, initial_job_settings, job_specific_uis: list[QWidget]):
         self.job_settings_tab = QScrollArea()
         self.tabs.addTab(self.job_settings_tab, "Job-specific settings")
         self.job_settings_tab.setWidgetResizable(True)
 
+        self.job_settings_container = QWidget(self.job_settings_tab)
+        self.job_settings_container.setLayout(QVBoxLayout())
         self.job_settings = job_setup_widget_type(
             initial_settings=initial_job_settings, parent=self
         )
-        self.job_settings_tab.setWidget(self.job_settings)
+        self.job_settings_container.layout().addWidget(self.job_settings)
+        self.job_settings_tab.setWidget(self.job_settings_container)
         if hasattr(self.job_settings, "parameter_changed"):
             self.job_settings.parameter_changed.connect(self.on_job_template_parameter_changed)
+
+        self.job_specific_uis = []
+        if job_specific_uis:
+            for job_specific_ui in job_specific_uis:
+                self._line = QFrame(self)
+                self._line.setFrameShape(QFrame.HLine)
+                self._line.setFrameShadow(QFrame.Sunken)
+                self.job_settings_container.layout().addWidget(self._line)
+                self.job_settings_container.layout().addWidget(job_specific_ui)
+                self.job_specific_uis.append(job_specific_ui)
+        self.job_settings_container.layout().addStretch()
 
     def _build_job_attachments_tab(
         self, auto_detected_attachments: AssetReferences, attachments: AssetReferences
@@ -357,23 +413,23 @@ class SubmitJobToDeadlineDialog(QDialog):
 
             if self.show_host_requirements_tab:
                 requirements = self.host_requirements.get_requirements()
-                self.on_create_job_bundle_callback(
-                    self,
-                    self.job_history_bundle_dir,
-                    settings,
-                    queue_parameters,
-                    asset_references,
-                    requirements,
+                self.plugin_manager.call_create_job_bundle_callback(
+                    widget=self,
+                    job_bundle_dir=self.job_history_bundle_dir,
+                    settings=settings,
+                    queue_parameters=queue_parameters,
+                    asset_references=asset_references,
+                    host_requirements=requirements,
                     purpose=JobBundlePurpose.EXPORT,
                 )
             else:
                 # Maintaining backward compatibility for submitters that do not support host_requirements yet
-                self.on_create_job_bundle_callback(
-                    self,
-                    self.job_history_bundle_dir,
-                    settings,
-                    queue_parameters,
-                    asset_references,
+                self.plugin_manager.call_create_job_bundle_callback(
+                    widget=self,
+                    job_bundle_dir=self.job_history_bundle_dir,
+                    settings=settings,
+                    queue_parameters=queue_parameters,
+                    asset_references=asset_references,
                     purpose=JobBundlePurpose.EXPORT,
                 )
 
@@ -427,24 +483,24 @@ class SubmitJobToDeadlineDialog(QDialog):
 
             if self.show_host_requirements_tab:
                 requirements = self.host_requirements.get_requirements()
-                self.on_create_job_bundle_callback(
-                    self,
-                    self.job_history_bundle_dir,
-                    settings,
-                    queue_parameters,
-                    asset_references,
-                    requirements,
-                    purpose=JobBundlePurpose.SUBMISSION,
+                self.plugin_manager.call_create_job_bundle_callback(
+                    widget=self,
+                    job_bundle_dir=self.job_history_bundle_dir,
+                    settings=settings,
+                    queue_parameters=queue_parameters,
+                    asset_references=asset_references,
+                    host_requirements=requirements,
+                    purpose=JobBundlePurpose.SUBMISSION
                 )
             else:
                 # Maintaining backward compatibility for submitters that do not support host_requirements yet
-                self.on_create_job_bundle_callback(
-                    self,
-                    self.job_history_bundle_dir,
-                    settings,
-                    queue_parameters,
-                    asset_references,
-                    purpose=JobBundlePurpose.SUBMISSION,
+                self.plugin_manager.call_create_job_bundle_callback(
+                    widget=self,
+                    job_bundle_dir=self.job_history_bundle_dir,
+                    settings=settings,
+                    queue_parameters=queue_parameters,
+                    asset_references=asset_references,
+                    purpose=JobBundlePurpose.SUBMISSION
                 )
 
             farm_id = get_setting("defaults.farm_id")
@@ -495,6 +551,11 @@ class SubmitJobToDeadlineDialog(QDialog):
                 deadline,
                 auto_accept=str2bool(get_setting("settings.auto_accept")),
                 require_paths_exist=self.job_attachments.get_require_paths_exist(),
+            )
+
+            # Execute any PostSubmission function defined.
+            self.plugin_manager.call_post_submit_hook(
+                job_id=self.create_job_response.get("jobId"),
             )
         except UserInitiatedCancel as uic:
             logger.info("Canceling submission.")
