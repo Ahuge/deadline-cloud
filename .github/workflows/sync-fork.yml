@@ -15,7 +15,7 @@ jobs:
       - uses: tgymnich/fork-sync@master
         with:
           owner: Ahuge
-          base: arch-mainline
+          base: mainline
           head: mainline
           merge_method: rebase
  
