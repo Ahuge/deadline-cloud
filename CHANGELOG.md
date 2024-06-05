@@ -1,3 +1,28 @@
+## 0.48.4 (2024-06-03)
+
+
+
+### Bug Fixes
+* **cli**: correct download-output command displaying resolved UNC path (#337) ([`6bcd9a2`](https://github.com/aws-deadline/deadline-cloud/commit/6bcd9a2285999d4b2fe0ba72d28f04fa0c6e6db4))
+
+## 0.48.3 (2024-05-27)
+
+
+
+### Bug Fixes
+* reverts using AWS CRT for faster transfers (#333) ([`2798190`](https://github.com/aws-deadline/deadline-cloud/commit/2798190c594610131855ea7d1bbb1c2adf7d8fb0))
+
+## 0.48.2 (2024-05-22)
+
+
+### Features
+* use AWS CRT for faster transfers (#319) ([`52da0ea`](https://github.com/aws-deadline/deadline-cloud/commit/52da0ea8816df2f39ec24fd35646b27f978a0891))
+
+### Bug Fixes
+* bundle submit parameter processing splits name/value at right-most = (#331) ([`09bead0`](https://github.com/aws-deadline/deadline-cloud/commit/09bead08be81f016e84408aead589fd31d2a6f01))
+* Prevent submission dialog sometimes closing on exceptions (#329) ([`3e369f9`](https://github.com/aws-deadline/deadline-cloud/commit/3e369f9a9f288f159f84eda1afc31a01f3305779))
+* Install boto3 CRT extra feature always (#328) ([`dffc71e`](https://github.com/aws-deadline/deadline-cloud/commit/dffc71e0c113437cfe3da5c934360db3573ad77c))
+
 ## 0.48.1 (2024-05-06)
 
 
@@ -10,7 +35,7 @@
 ## 0.48.0 (2024-04-25)
 
 ### BREAKING CHANGES
-* always prompt user about misconfigured inputs (#309) ([`f8d5826`](https://github.com/aws-deadline/deadline-cloud/commit/f8d5826316cbaae1a41d11c2decad38a4ab5ca5d))
+* Improve handling of misconfigured input job attachments (that are not within any locations for the submission machines’s configured storage profile), handle empty/non-existent paths and add them to asset references, add `require_paths_exist` option (#309) ([`f8d5826`](https://github.com/aws-deadline/deadline-cloud/commit/f8d5826316cbaae1a41d11c2decad38a4ab5ca5d))
 * **job_attachments**: use correct profile for GetStorageProfileForQueue API (#296) ([`a8de5f6`](https://github.com/aws-deadline/deadline-cloud/commit/a8de5f679a7b7da53ce83ab1ba25cacded06773f))
 
 
