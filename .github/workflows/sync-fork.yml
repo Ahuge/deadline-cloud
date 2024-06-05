@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: tgymnich/fork-sync@master
         with:
-          owner: aws-deadline
+          owner: Ahuge
           base: arch-mainline
           head: mainline
           merge_method: rebase
