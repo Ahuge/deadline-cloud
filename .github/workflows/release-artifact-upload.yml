@@ -47,7 +47,7 @@ jobs:
             ${{steps.build-source.outputs.macos-deadline-tar-path}}
             ${{steps.build-deps.outputs.macos-deadline-dependency-path}}
 
-  create-release-bundle-rocky-linux:
+  create-release-bundle-windows:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,14 +69,6 @@ jobs:
           cp dist/deadline-${GITHUB_REF##*/}-py3-none-any.whl dist/deadline-${GITHUB_REF##*/}.tar.gz artifacts/
           echo "windows-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}-py3-none-any.whl" >> $GITHUB_OUTPUT
           echo "windows-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}.tar.gz" >> $GITHUB_OUTPUT
-      - name: Build depsBundle Rocky
-        id: build-deps
-        uses: ./.github/actions/rocky-linux-action
-        with:
-          context: .
-        env:
-          COMMAND: python depsBundle.py
-          OUTPUT_FILE: dependency_bundle/deadline-deps.zip
       - name: Build depsBundle
         id: build-deps
         env:
@@ -96,3 +88,45 @@ jobs:
             ${{steps.build-source.outputs.windows-deadline-whl-path}}
             ${{steps.build-source.outputs.windows-deadline-tar-path}}
             ${{steps.build-deps.outputs.windows-deadline-dependency-path}}
+
+  create-release-bundle-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          ref: release
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          pip install --upgrade hatch
+      - name: Build Package
+        id: build-source
+        run: |
+          mkdir ${GITHUB_WORKSPACE}/artifacts
+          hatch -v build
+          cp dist/deadline-${GITHUB_REF##*/}-py3-none-any.whl dist/deadline-${GITHUB_REF##*/}.tar.gz artifacts/
+          echo "linux-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}-py3-none-any.whl" >> $GITHUB_OUTPUT
+          echo "linux-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}.tar.gz" >> $GITHUB_OUTPUT
+      - name: Build depsBundle
+        id: build-deps
+        env:
+          PYTHON_PLATFORM: "manylinux2014_x86_64"
+          PLATFORM: "linux"
+        run: |
+          mkdir ${GITHUB_WORKSPACE}/artifacts
+          python depsBundle.py
+          cp dependency_bundle/deadline-deps.zip artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip
+          echo "linux-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
+      - name: Upload Release Asset
+        id: upload-release-asset-linux
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ${{steps.build-source.outputs.linux-deadline-whl-path}}
+            ${{steps.build-source.outputs.linux-deadline-tar-path}}
+            ${{steps.build-deps.outputs.linux-deadline-dependency-path}}
