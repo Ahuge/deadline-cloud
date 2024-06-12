@@ -22,9 +22,10 @@ jobs:
         run: |
           mkdir ${GITHUB_WORKSPACE}/artifacts
           hatch -v build
-          cp ${GITHUB_WORKSPACE}/dist/deadline-${GITHUB_REF##*/}-py3-none-any.whl ${GITHUB_WORKSPACE}/dist/deadline-${GITHUB_REF##*/}.tar.gz ${GITHUB_WORKSPACE}/artifacts/
-          echo "macos-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}-py3-none-any.whl" >> $GITHUB_OUTPUT
-          echo "macos-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}.tar.gz" >> $GITHUB_OUTPUT
+          REF="$(cut -d'+' -f1 <<<"${GITHUB_REF##*/}")"
+          cp ${GITHUB_WORKSPACE}/dist/deadline-${REF}-py3-none-any.whl ${GITHUB_WORKSPACE}/dist/deadline-${REF}.tar.gz ${GITHUB_WORKSPACE}/artifacts/
+          echo "macos-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${REF}-py3-none-any.whl" >> $GITHUB_OUTPUT
+          echo "macos-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${REF}.tar.gz" >> $GITHUB_OUTPUT
       - name: Build depsBundle
         id: build-deps
         env:
@@ -33,8 +34,9 @@ jobs:
         run: |
           mkdir ${GITHUB_WORKSPACE}/artifacts
           python depsBundle.py
-          cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip
-          echo "macos-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
+          REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
+          cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip
+          echo "macos-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
       - name: Upload Release Asset
         id: upload-release-asset-macos
         uses: softprops/action-gh-release@v1
@@ -60,11 +62,14 @@ jobs:
       - name: Build Package
         id: build-source
         run: |
-          mkdir ${GITHUB_WORKSPACE}/artifacts
+          New-Item $Env:GITHUB_WORKSPACE/artifacts -ItemType Directory
           hatch -v build
-          cp ${GITHUB_WORKSPACE}/dist/deadline-${GITHUB_REF##*/}-py3-none-any.whl ${GITHUB_WORKSPACE}/dist/deadline-${GITHUB_REF##*/}.tar.gz ${GITHUB_WORKSPACE}/artifacts/
-          echo "windows-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}-py3-none-any.whl" >> $GITHUB_OUTPUT
-          echo "windows-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}.tar.gz" >> $GITHUB_OUTPUT
+          $REF=$Env:GITHUB_REF.Split("/")[-1].Split("+")[0]
+          Copy-Item -Path "$Env:GITHUB_WORKSPACE/dist/deadline-${REF}-py3-none-any.whl" -Destination "$Env:GITHUB_WORKSPACE/artifacts/"
+          Copy-Item -Path "$Env:GITHUB_WORKSPACE/dist/deadline-${REF}.tar.gz" -Destination "$Env:GITHUB_WORKSPACE/artifacts/"
+          echo "windows-deadline-whl-path=$Env:GITHUB_WORKSPACE/artifacts/deadline-${REF}-py3-none-any.whl" >> $Env:GITHUB_OUTPUT
+          echo "windows-deadline-tar-path=$Env:GITHUB_WORKSPACE/artifacts/deadline-${REF}.tar.gz" >> $Env:GITHUB_OUTPUT
+
       - name: Build depsBundle
         id: build-deps
         env:
@@ -102,9 +107,10 @@ jobs:
         run: |
           mkdir ${GITHUB_WORKSPACE}/artifacts
           hatch -v build
-          cp ${GITHUB_WORKSPACE}/dist/deadline-${GITHUB_REF##*/}-py3-none-any.whl ${GITHUB_WORKSPACE}/dist/deadline-${GITHUB_REF##*/}.tar.gz ${GITHUB_WORKSPACE}/artifacts/
-          echo "linux-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}-py3-none-any.whl" >> $GITHUB_OUTPUT
-          echo "linux-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${GITHUB_REF##*/}.tar.gz" >> $GITHUB_OUTPUT
+          REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
+          cp ${GITHUB_WORKSPACE}/dist/deadline-${REF}-py3-none-any.whl ${GITHUB_WORKSPACE}/dist/deadline-${REF}.tar.gz ${GITHUB_WORKSPACE}/artifacts/
+          echo "linux-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${REF}-py3-none-any.whl" >> $GITHUB_OUTPUT
+          echo "linux-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${REF}.tar.gz" >> $GITHUB_OUTPUT
       - name: Build depsBundle
         id: build-deps
         env:
@@ -112,9 +118,10 @@ jobs:
           PLATFORM: "linux"
         run: |
           mkdir ${GITHUB_WORKSPACE}/artifacts
+          REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
           python depsBundle.py
-          cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip
-          echo "linux-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
+          cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip
+          echo "linux-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
       - name: Upload Release Asset
         id: upload-release-asset-linux
         uses: softprops/action-gh-release@v1
