@@ -33,7 +33,7 @@ jobs:
           PLATFORM: "macos"
         run: |
           python depsBundle.py
-          REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
+          REF="$(cut -d'+' -f1 <<<"${GITHUB_REF##*/}")"
           cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip
           echo "macos-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
       - name: Upload Release Asset
@@ -106,7 +106,7 @@ jobs:
         run: |
           mkdir ${GITHUB_WORKSPACE}/artifacts
           hatch -v build
-          REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
+          REF="$(cut -d'+' -f1 <<<"${GITHUB_REF##*/}")"
           cp ${GITHUB_WORKSPACE}/dist/deadline-${REF}-py3-none-any.whl ${GITHUB_WORKSPACE}/dist/deadline-${REF}.tar.gz ${GITHUB_WORKSPACE}/artifacts/
           echo "linux-deadline-whl-path=${GITHUB_WORKSPACE}/artifacts/deadline-${REF}-py3-none-any.whl" >> $GITHUB_OUTPUT
           echo "linux-deadline-tar-path=${GITHUB_WORKSPACE}/artifacts/deadline-${REF}.tar.gz" >> $GITHUB_OUTPUT
@@ -116,7 +116,7 @@ jobs:
           PYTHON_PLATFORM: "manylinux2014_x86_64"
           PLATFORM: "linux"
         run: |
-          REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
+          REF="$(cut -d'+' -f1 <<<"${GITHUB_REF##*/}")"
           python depsBundle.py
           cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip
           echo "linux-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
