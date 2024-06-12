@@ -67,8 +67,8 @@ jobs:
           $REF=$Env:GITHUB_REF.Split("/")[-1].Split("+")[0]
           Copy-Item -Path "$Env:GITHUB_WORKSPACE/dist/deadline-${REF}-py3-none-any.whl" -Destination "$Env:GITHUB_WORKSPACE/artifacts/"
           Copy-Item -Path "$Env:GITHUB_WORKSPACE/dist/deadline-${REF}.tar.gz" -Destination "$Env:GITHUB_WORKSPACE/artifacts/"
-          echo "windows-deadline-whl-path=$Env:GITHUB_WORKSPACE/artifacts/deadline-${REF}-py3-none-any.whl" >> $Env:GITHUB_OUTPUT
-          echo "windows-deadline-tar-path=$Env:GITHUB_WORKSPACE/artifacts/deadline-${REF}.tar.gz" >> $Env:GITHUB_OUTPUT
+          echo "windows-deadline-whl-path=$Env:GITHUB_WORKSPACE\artifacts\deadline-${REF}-py3-none-any.whl" >> $Env:GITHUB_OUTPUT
+          echo "windows-deadline-tar-path=$Env:GITHUB_WORKSPACE\artifacts\deadline-${REF}.tar.gz" >> $Env:GITHUB_OUTPUT
 
       - name: Build depsBundle
         id: build-deps
@@ -81,7 +81,7 @@ jobs:
           $REF=$Env:GITHUB_REF.Split("/")[-1].Split("+")[0]
           Copy-Item -Path "$Env:GITHUB_WORKSPACE/dependency_bundle/deadline-deps.zip" -Destination "$Env:GITHUB_WORKSPACE/artifacts/deadline-deps-${REF}-$Env:PLATFORM.zip"
           dir "$Env:GITHUB_WORKSPACE/artifacts/"
-          echo "windows-deadline-dependency-path=$Env:GITHUB_WORKSPACE/artifacts/deadline-deps-${REF}-$Env:PLATFORM.zip" >> $Env:GITHUB_OUTPUT
+          echo "windows-deadline-dependency-path=$Env:GITHUB_WORKSPACE\artifacts\deadline-deps-${REF}-$Env:PLATFORM.zip" >> $Env:GITHUB_OUTPUT
       - name: Upload Release Asset
         id: upload-release-asset-windows
         uses: softprops/action-gh-release@v1
