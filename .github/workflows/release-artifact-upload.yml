@@ -32,7 +32,6 @@ jobs:
           PYTHON_PLATFORM: "macosx_10_9_x86_64"
           PLATFORM: "macos"
         run: |
-          mkdir ${GITHUB_WORKSPACE}/artifacts
           python depsBundle.py
           REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
           cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip
@@ -48,7 +47,7 @@ jobs:
             ${{steps.build-deps.outputs.macos-deadline-dependency-path}}
 
   create-release-bundle-windows:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         name: Checkout
@@ -76,10 +75,10 @@ jobs:
           PYTHON_PLATFORM: "win_amd64"
           PLATFORM: "windows"
         run: |
-          mkdir ${GITHUB_WORKSPACE}/artifacts
           python depsBundle.py
-          cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip
-          echo "windows-deadline-dependency-path=${GITHUB_WORKSPACE}/artifacts/deadline-deps-${GITHUB_REF##*/}-${PLATFORM}.zip" >> $GITHUB_OUTPUT
+          $REF=$Env:GITHUB_REF.Split("/")[-1].Split("+")[0]
+          Copy-Item -Path "$Env:GITHUB_WORKSPACE/dependency_bundle/deadline-deps.zip" -Destination "$Env:GITHUB_WORKSPACE/artifacts/deadline-deps-${REF}-$Env:PLATFORM.zip"
+          echo "windows-deadline-dependency-path=$Env:GITHUB_WORKSPACE/artifacts/deadline-deps-${REF}-$Env:PLATFORM.zip" >> $Env:GITHUB_OUTPUT
       - name: Upload Release Asset
         id: upload-release-asset-windows
         uses: softprops/action-gh-release@v1
@@ -117,7 +116,6 @@ jobs:
           PYTHON_PLATFORM: "manylinux2014_x86_64"
           PLATFORM: "linux"
         run: |
-          mkdir ${GITHUB_WORKSPACE}/artifacts
           REF="$(cut -d'+' -f1 <<<'${GITHUB_REF##*/}')"
           python depsBundle.py
           cp ${GITHUB_WORKSPACE}/dependency_bundle/deadline-deps.zip ${GITHUB_WORKSPACE}/artifacts/deadline-deps-${REF}-${PLATFORM}.zip
