@@ -159,7 +159,8 @@ def bundle_submit(
                 )
 
         # Exit early if there are no warnings and we've either set auto accept or there's no files to confirm
-        if not warning_message and (
+        # if not warning_message and (
+        if (
             yes
             or config_file.str2bool(get_setting("settings.auto_accept", config=config))
             or upload_group.total_input_files == 0
