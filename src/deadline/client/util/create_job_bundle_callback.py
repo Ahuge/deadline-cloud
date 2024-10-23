@@ -28,6 +28,7 @@ def _reference_create_job_bundle_callback_type(
 
 CALLBACK_REFERENCE_SIGNATURE = inspect.signature(_reference_create_job_bundle_callback_type).parameters
 CALLBACK_REFERENCE_HINTS = get_type_hints(_reference_create_job_bundle_callback_type)
+CREATE_JOB_BUNDLE_CALLBACK_NOOP = _reference_create_job_bundle_callback_type
 
 
 def load_create_job_bundle_callback(module_path, module_name="create_job_bundle_callback"):

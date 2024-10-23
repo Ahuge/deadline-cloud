@@ -16,6 +16,7 @@ def _reference_post_submit_callback_type(
 
 CALLBACK_REFERENCE_SIGNATURE = inspect.signature(_reference_post_submit_callback_type).parameters
 CALLBACK_REFERENCE_HINTS = get_type_hints(_reference_post_submit_callback_type)
+POST_SUBMIT_CALLBACK_NOOP = _reference_post_submit_callback_type
 
 
 def load_post_submit_callback(module_path, module_name="post_submit_callback"):

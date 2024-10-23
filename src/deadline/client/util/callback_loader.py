@@ -35,6 +35,20 @@ def import_module_function(module_path, module_name, function_name):
     return getattr(mod, function_name)
 
 
+def import_module_class(module_path, module_name, class_type):
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = mod
+    spec.loader.exec_module(mod)
+    _classes = []
+    for attr in filter(lambda x: isinstance(getattr(mod, x), type), dir(mod)):
+        if issubclass(getattr(mod, attr), class_type):
+            _class = getattr(mod, attr)
+            if not hasattr(_class, "__abstractmethods__") or not _class.__abstractmethods__:
+                return _class
+    raise ImportError("Could not find class object as a fully concrete class of type {}".format(class_type.__name__))
+
+
 def _validate_parameter_type(parameter_type, other_type):
     if parameter_type == other_type:
         return True

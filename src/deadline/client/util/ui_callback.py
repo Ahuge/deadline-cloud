@@ -44,6 +44,7 @@ def _reference_ui_callback_type(
 
 CALLBACK_REFERENCE_SIGNATURE = inspect.signature(_reference_ui_callback_type).parameters
 CALLBACK_REFERENCE_HINTS = get_type_hints(_reference_ui_callback_type)
+UI_CALLBACK_NOOP = _reference_ui_callback_type
 
 
 def load_ui_callback(module_path, module_name="ui_callback"):
