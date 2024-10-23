@@ -11,9 +11,15 @@ from deadline.client.ui.dialogs.submit_job_to_deadline_dialog import (  # type: 
 
 from deadline.client.job_bundle.submission import AssetReferences
 from deadline.client.util.ui_callback import UICallbackResponse
+from deadline.client.util.create_job_bundle_callback import CREATE_JOB_BUNDLE_CALLBACK_NOOP
+from deadline.client.util.post_submit_callback import POST_SUBMIT_CALLBACK_NOOP
+from deadline.client.util.ui_callback import UI_CALLBACK_NOOP
 
 
 class DeadlineCloudCallbackType(metaclass=ABCMeta):
+    DEFAULT_CREATE_JOB_BUNDLE_CALLBACK = CREATE_JOB_BUNDLE_CALLBACK_NOOP
+    DEFAULT_POST_SUBMIT_CALLBACK = POST_SUBMIT_CALLBACK_NOOP
+    DEFAULT_UI_CALLBACK = UI_CALLBACK_NOOP
     @abstractmethod
     def on_ui_callback(
         self,
