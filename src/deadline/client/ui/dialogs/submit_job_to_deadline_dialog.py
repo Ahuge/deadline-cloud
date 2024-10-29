@@ -118,6 +118,7 @@ class SubmitJobToDeadlineDialog(QDialog):
             host_requirements = self.host_requirements_tab.get_requirements()
 
         initial_job_settings, auto_detected_attachments, host_requirements, job_uis = self.plugin_manager.call_ui_hook(
+            dialog=self,
             job_settings=initial_job_settings,
             asset_references=auto_detected_attachments,
             host_requirements=host_requirements
@@ -310,6 +311,7 @@ class SubmitJobToDeadlineDialog(QDialog):
                 self.job_settings_container.layout().addWidget(self._line)
                 self.job_settings_container.layout().addWidget(job_specific_ui)
                 self.job_specific_uis.append(job_specific_ui)
+        self.job_settings_container.layout().addStretch()
 
     def _build_job_attachments_tab(
         self, auto_detected_attachments: AssetReferences, attachments: AssetReferences

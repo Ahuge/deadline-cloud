@@ -4,15 +4,13 @@ import inspect
 import sys
 from typing import Any, Optional, get_type_hints
 
-from deadline.client.ui.dialogs.submit_job_to_deadline_dialog import (  # type: ignore
-    SubmitJobToDeadlineDialog,
-    JobBundlePurpose,
-)
+from qtpy import QtWidgets
+from deadline.client.ui.dialogs._types import JobBundlePurpose
 from deadline.client.job_bundle.submission import AssetReferences
 
 
 def _reference_callback_signature(
-    widget: SubmitJobToDeadlineDialog,
+    widget: QtWidgets.QDialog,
     job_bundle_dir: str,
     settings: object,
     queue_parameters: list[dict[str, Any]],

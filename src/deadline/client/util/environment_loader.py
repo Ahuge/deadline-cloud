@@ -1,7 +1,7 @@
 import os
 
 
-from deadline.client.util import ui_callback, post_submit_callback, create_job_bundle_callback
+from . import ui_callback, post_submit_callback, create_job_bundle_callback
 from deadline.client.exceptions import DeadlineOperationError
 
 

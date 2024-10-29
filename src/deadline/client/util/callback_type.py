@@ -4,16 +4,14 @@ from abc import ABCMeta, abstractmethod
 
 from typing import Any, Optional
 
-from deadline.client.ui.dialogs.submit_job_to_deadline_dialog import (  # type: ignore
-    SubmitJobToDeadlineDialog,
-    JobBundlePurpose,
-)
+from qtpy import QtWidgets
+from deadline.client.ui.dialogs._types import JobBundlePurpose
 
 from deadline.client.job_bundle.submission import AssetReferences
-from deadline.client.util.ui_callback import UICallbackResponse
-from deadline.client.util.create_job_bundle_callback import CREATE_JOB_BUNDLE_CALLBACK_NOOP
-from deadline.client.util.post_submit_callback import POST_SUBMIT_CALLBACK_NOOP
-from deadline.client.util.ui_callback import UI_CALLBACK_NOOP
+from .ui_callback import UICallbackResponse
+from .create_job_bundle_callback import CREATE_JOB_BUNDLE_CALLBACK_NOOP
+from .post_submit_callback import POST_SUBMIT_CALLBACK_NOOP
+from .ui_callback import UI_CALLBACK_NOOP
 
 
 class DeadlineCloudCallbackType(metaclass=ABCMeta):
@@ -23,7 +21,7 @@ class DeadlineCloudCallbackType(metaclass=ABCMeta):
     @abstractmethod
     def on_ui_callback(
         self,
-        dialog: SubmitJobToDeadlineDialog,
+        dialog: QtWidgets.QDialog,
         settings: object,
         asset_references: AssetReferences,
         host_requirements: Optional[dict[str, Any]] = None,
@@ -33,7 +31,7 @@ class DeadlineCloudCallbackType(metaclass=ABCMeta):
     @abstractmethod
     def on_create_job_bundle_callback(
         self,
-        widget: SubmitJobToDeadlineDialog,
+        widget: QtWidgets.QDialog,
         job_bundle_dir: str,
         settings: object,
         queue_parameters: list[dict[str, Any]],

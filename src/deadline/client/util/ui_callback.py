@@ -11,9 +11,7 @@ from qtpy.QtWidgets import (  # pylint: disable=import-error; type: ignore
     QWidget,
 )
 
-from deadline.client.ui.dialogs.submit_job_to_deadline_dialog import (  # type: ignore
-    SubmitJobToDeadlineDialog,
-)
+from qtpy import QtWidgets
 from deadline.client.job_bundle.submission import AssetReferences
 
 from .callback_loader import import_module_function, validate_function_signature
@@ -34,7 +32,7 @@ class UICallbackResponse:
 
 
 def _reference_ui_callback_type(
-    dialog: SubmitJobToDeadlineDialog,
+    dialog: QtWidgets.QDialog,
     settings: object,
     asset_references: AssetReferences,
     host_requirements: Optional[dict[str, Any]] = None,
