@@ -338,3 +338,85 @@ class MyCustomWidget(QWidget):
 
 ```
 
+## Submitter Plugins
+The `SubmitJobToDeadlineDialog` supports loading plugins that can modify the default DCC Submitters.
+This is done either by [Package Plugins](#Package-Plugins) or via [Submitter Hooks](#Submitter-Hooks)
+
+### Package Plugins
+Package Plugins are plugins that can be installed via external python packages and get automatically loaded by a
+DCC specific submitter. These are python files that live in the `deadline.<dcc>_submitter.plugins` namespace and
+consist of a class object that implements [DeadlineCloudCallbackType](src/deadline/client/util/callback_type.py).
+The `DeadlineCloudCallbackType` base class requires you to implement the following methods:
+```python
+class MyPlugin(DeadlineCloudCallbackType):
+    def on_ui_callback(
+        self,
+        dialog: SubmitJobToDeadlineDialog,
+        settings: object,
+        asset_references: AssetReferences,
+        host_requirements: Optional[dict[str, Any]] = None,
+    ) -> UICallbackResponse
+
+    def on_create_job_bundle_callback(
+        self,
+        widget: SubmitJobToDeadlineDialog,
+        job_bundle_dir: str,
+        settings: object,
+        queue_parameters: list[dict[str, Any]],
+        asset_references: AssetReferences,
+        host_requirements: Optional[dict[str, Any]] = None,
+        purpose: JobBundlePurpose = JobBundlePurpose.SUBMISSION,
+    ) -> None
+
+    def on_post_submit_callback(
+            self,
+            job_id: str,
+    ) -> None
+```
+
+### Submitter Hooks
+Submitter Hooks are individual functions that a DCC Submitter passes to `SubmitJobToDeadlineDialog` via the following
+callback arguments `on_create_job_bundle_callback`, `on_ui_callback`, `on_post_submit_callback`.
+
+The exact methodology on how a submitter plugin will provide these to the `SubmitJobToDeadlineDialog` dialog is up to
+the submitter but it is recommended that new submitters look for environment variables in the following structure:
+- `DEADLINE_<DCC>_CREATE_JOB_BUNDLE_CALLBACK`
+- `DEADLINE_<DCC>_UI_CALLBACK`
+- `DEADLINE_<DCC>_POST_SUBMIT_CALLBACK`
+
+The DCC submitter can utilize the `deadline.client.util` functions `ui_callback`, `post_submit_callback`,
+`create_job_bundle_callback` to load and validate these callbacks from disk.
+
+An example on how to load these shown below:
+```python
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+from __future__ import annotations
+
+import os
+import yaml  # type: ignore[import]
+
+from deadline.client.ui.dialogs.submit_job_to_deadline_dialog import (  # type: ignore
+    SubmitJobToDeadlineDialog,
+    JobBundlePurpose,
+)
+from deadline.client.util.environment_loader import load_dcc_environment_callbacks
+from deadline.client.ui.dialogs.submit_job_to_deadline_dialog import SubmitJobToDeadlineDialog
+
+_on_ui_callback, _on_create_job_bundle_callback, _on_post_submit_callback = load_dcc_environment_callbacks(dcc_name="maya")
+callback_kwargs = {
+    "on_create_job_bundle_callback": _on_create_job_bundle_callback,
+    "on_ui_callback": _on_ui_callback,
+    "on_post_submit_callback": _on_post_submit_callback
+}
+
+kwargs = {
+    # ... Normal SubmitJobToDeadlineDialog kwargs
+}
+dialog = SubmitJobToDeadlineDialog(
+    on_create_job_bundle_callback=callback_kwargs["on_create_job_bundle_callback"],
+    on_ui_callback=callback_kwargs["on_ui_callback"],
+    on_post_submit_callback=callback_kwargs["on_post_submit_callback"],
+    **kwargs,
+)
+```
