@@ -1,3 +1,6 @@
+# Arch Updates
+- Naive callback loader for a VFX customer that needs to convert their sgtk nodes before going to the farm (Better solution in DEADLINE-CLOUD could be written)
+- 
 # AWS Deadline Cloud Client
 
 [![pypi](https://img.shields.io/pypi/v/deadline.svg?style=flat)](https://pypi.python.org/pypi/deadline)
